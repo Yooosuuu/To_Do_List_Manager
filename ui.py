@@ -1,15 +1,17 @@
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QListWidget, QLineEdit, QMessageBox, QComboBox, QLabel,
-    QMenu, QInputDialog
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QLineEdit, QMessageBox, QComboBox, QLabel,
+    QMenu, QInputDialog, QApplication
 )
-from PyQt6.QtGui import QColor, QAction
-from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QAction, QDrag
+from PyQt6.QtCore import Qt, QMimeData
 
 from database import Database
+
 
 class TaskManager(QWidget):
     def __init__(self):
         super().__init__()
+        self.zoom = 14
         self.setWindowTitle("Gestionnaire de Tâches")
         self.setGeometry(100, 100, 500, 700)
 
@@ -31,6 +33,11 @@ class TaskManager(QWidget):
         self.add_button = QPushButton("Ajouter Tâche", self)
         self.add_button.clicked.connect(self.add_task)
         self.layout.addWidget(self.add_button)
+        
+        # Bouton pour trier les tâches
+        self.sort_button = QPushButton("Trier Tâches", self)
+        self.sort_button.clicked.connect(self.sort_tasks)
+        self.layout.addWidget(self.sort_button)
 
         # Liste des tâches actives
         self.layout.addWidget(QLabel("Tâches en cours :"))
@@ -55,12 +62,14 @@ class TaskManager(QWidget):
         self.delete_button = QPushButton("Supprimer Tâche", self)
         self.delete_button.clicked.connect(self.delete_task)
         self.layout.addWidget(self.delete_button)
+        
+        self.setMouseTracking(True)
 
         self.setLayout(self.layout)
 
         self.load_tasks()
 
-    def load_tasks(self):
+    def load_tasks(self, sort=True):
         self.task_list.clear()
         self.completed_list.clear()
         color = {
@@ -69,7 +78,11 @@ class TaskManager(QWidget):
             "Haute": "red",
             "Terminée": "lightgray"
         }
-        for task in self.db.get_tasks():
+        if sort:
+            tasks = self.db.sort_tasks()
+        else:
+            tasks = self.db.get_tasks()
+        for task in tasks:
             task_id = task[0]
             task_text = task[1]
             task_priority = task[2]
@@ -94,7 +107,7 @@ class TaskManager(QWidget):
         if task_text:
             self.db.add_task(task_text, priority)
             self.task_input.clear()
-            self.load_tasks()
+            self.sort_tasks()
         else:
             QMessageBox.warning(self, "Erreur", "La tâche ne peut pas être vide !")
 
@@ -107,6 +120,9 @@ class TaskManager(QWidget):
             self.load_tasks()
         else:
             QMessageBox.warning(self, "Erreur", "Veuillez sélectionner une tâche à supprimer !")
+            
+    def sort_tasks(self):
+        self.load_tasks(sort=True)        
     
     def clear_completed_tasks(self):
         self.db.clear_completed()
@@ -178,6 +194,15 @@ class TaskManager(QWidget):
         if ok:
             self.db.update_priority(task_id, priority)
             self.load_tasks()
+            
+    def wheelEvent(self, event):
+        if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self.zoom += 1
+            elif delta < 0 and self.zoom > 1:
+                self.zoom -= 1
+            self.setStyleSheet(f"font-size: {self.zoom}px;")
 
     def closeEvent(self, event):
         self.db.close()

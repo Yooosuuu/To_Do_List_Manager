@@ -44,6 +44,29 @@ class Database:
     def clear_completed(self):
         self.cursor.execute("DELETE FROM tasks WHERE status = 'Terminée'")
         self.conn.commit()
+        
+    def sort_tasks(self):
+        self.cursor.execute("""
+            SELECT id, task, priority, status 
+            FROM tasks 
+            ORDER BY 
+                CASE priority
+                    WHEN 'Haute' THEN 1
+                    WHEN 'Normale' THEN 2
+                    WHEN 'Faible' THEN 3
+                END
+        """)
+        sorted_tasks = self.cursor.fetchall()
+        # Update the table to reflect the sorted order
+        self.cursor.execute("DELETE FROM tasks")
+        for task in sorted_tasks:
+            self.cursor.execute(
+                "INSERT INTO tasks (id, task, priority, status) VALUES (?, ?, ?, ?)", 
+                task
+            )
+        self.conn.commit()
+        return sorted_tasks
+
     
     def close(self):
         self.conn.close()
