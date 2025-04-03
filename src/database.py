@@ -1,5 +1,6 @@
 import sqlite3
 
+# Classe pour gérer la base de données SQLite
 class Database:
     def __init__(self, db_name="tasks.db"):
         self.conn = sqlite3.connect(db_name)
@@ -74,6 +75,10 @@ class Database:
 
     def update_task_status(self, task_id, status):
         self.cursor.execute("UPDATE tasks SET status = ? WHERE id = ?", (status, task_id))
+        self.conn.commit()
+    
+    def update_task_progress(self, task_id, progress):
+        self.cursor.execute("UPDATE tasks SET progress = ? WHERE id = ?", (progress, task_id))
         self.conn.commit()
 
     def update_task_details(self, task_id, task_text, priority, description, progress, duration, deadline):

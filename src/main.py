@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from ui import TaskManager
+from TaskManager import TaskManager
 
 def main():
     app = QApplication(sys.argv)
