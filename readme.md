@@ -1,6 +1,6 @@
-# Task Manager
+# To Do List Manager
 
-Le **Task Manager** est une application de gestion de tâches développée en Python, utilisant PyQt6 pour l'interface graphique et Pygame pour certains éléments visuels interactifs. Cette application vous aide à organiser vos tâches personnelles ou professionnelles de manière efficace.
+**To Do List Manager** est une application de gestion de tâches développée en Python, utilisant PyQt6 pour l'interface graphique et sqlite3 pour la gestion des données. Cette application vous aide à organiser vos tâches personnelles et/ou professionnelles de manière efficace.
 
 ## Fonctionnalités
 
@@ -8,6 +8,7 @@ Le **Task Manager** est une application de gestion de tâches développée en Py
 - **Suivi de l'avancement** : Classement des tâches par statut ("À faire", "En cours", "Terminé").
 - **Interface intuitive** : Une interface graphique claire et accessible pour une utilisation quotidienne.
 - **Gestion des priorités** : Assigner des priorités aux tâches pour mieux les organiser.
+- **Une interface Kanban** : Possibilité de passer sur une interface Kanban
 
 ## Prérequis
 
@@ -15,12 +16,12 @@ Avant d'utiliser cette application, assurez-vous d'avoir installé Python ainsi 
 
 - Python 3.x (testé avec Python 3.13)
 - PyQt6
-- Pygame (si des éléments interactifs sont utilisés)
+- sqlite3
 
 Installation des dépendances :
 
 ```sh
-pip install pyqt6 pygame
+pip install pyqt6 sqlite3
 ```
 
 ## Installation
@@ -31,7 +32,7 @@ pip install pyqt6 pygame
    ```
 2. Accédez au dossier du projet :
    ```sh
-   cd task-manager
+   cd task_manager
    ```
 3. Installez les dépendances requises :
    ```sh
@@ -55,22 +56,36 @@ Pour créer un exécutable, utilisez **PyInstaller** :
    pyinstaller --onefile --windowed --add-data "src/icon/*;icon" --icon=src/icon/logo.png src/main.py
    ```
 
-L'exécutable sera disponible dans le dossier `dist/`.
+L'exécutable sera disponible dans le dossier `dist/`. (Remplacer ; par : si sur linux/MacOS)
 
 ## Structure du projet
 
 ```
-task-manager/
-│
-├── src/                # Code source de l'application
-│   ├── main.py         # Point d'entrée du programme
-│   ├── taskmanager.py  # Gestionnaire des tâches
-│   └── icon/           # Ressources graphiques
-│
-├── dist/               # Exécutable généré par PyInstaller
-├── build/              # Dossier temporaire de compilation
-├── requirements.txt    # Dépendances requises
-└── README.md           # Documentation
+Task_manager/
+├─ dist/ (si création d'un exécutable)
+│  ├─ tasks.db
+│  └─ To Do List.exe
+├─ src/
+│  ├─ icon/
+│  │  ├─ agenda.png
+│  │  ├─ kanban.png
+│  │  ├─ logo.png
+│  │  └─ loupe.png
+│  ├─ AgendaDialog.py
+│  ├─ database.py
+│  ├─ EditTaskDialog.py
+│  ├─ KanbanDialog.py
+│  ├─ main.py
+│  ├─ ProgressionBar.py
+│  ├─ TaskDetailsDialog.py
+│  ├─ TaskManager.py
+│  ├─ ui.py
+│  └─ utils.py
+├─ .gitignore
+├─ main.spec
+├─ readme.md
+└─ requirements.txt
+
 ```
 
 ## Contribution
