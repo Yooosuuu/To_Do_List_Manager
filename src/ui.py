@@ -1,24 +1,20 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton, QListWidget, QLineEdit, QMessageBox, QComboBox, QLabel,
-    QMenu, QInputDialog, QApplication, QDialog, QFormLayout, QDialogButtonBox, QListWidgetItem, QHBoxLayout
+    QMenu, QInputDialog, QApplication, QDialog, QFormLayout, QDialogButtonBox, QListWidgetItem, QHBoxLayout, QDateEdit,
+    QProgressBar, QCalendarWidget
 )
 from PyQt6.QtGui import QColor, QAction, QShortcut, QKeySequence
-from PyQt6.QtCore import Qt, QEvent
+from PyQt6.QtCore import Qt, QEvent, QDate
 
 from database import Database
 
 class EditTaskDialog(QDialog):
     def __init__(self, task_details, db, parent=None):
-        """
-        task_details est un tuple : (id, task, priority, status, description, progress, duration)
-        db est l'instance de Database pour récupérer et mettre à jour les sous-tâches.
-        """
         super().__init__(parent)
-        self.setWindowTitle("Modifier la tâche")
         self.task_details = task_details
         self.db = db
         self.setup_ui()
-
+        
     def setup_ui(self):
         self.layout = QFormLayout(self)
 
@@ -51,16 +47,27 @@ class EditTaskDialog(QDialog):
             self.duration_combo.setCurrentIndex(index)
         self.layout.addRow("Durée:", self.duration_combo)
 
+        # Ajout de la deadline avec un QDateEdit
+        self.deadline_edit = QDateEdit(self)
+        self.deadline_edit.setCalendarPopup(True)
+        if self.task_details[7]:
+            date = QDate.fromString(self.task_details[7], "dd/MM/yyyy")
+            if date.isValid():
+                self.deadline_edit.setDate(date)
+            else:
+                self.deadline_edit.setDate(QDate.currentDate())
+        else:
+            self.deadline_edit.setDate(QDate.currentDate())
+        self.layout.addRow("Deadline:", self.deadline_edit)
+
         # Sous-tâches
         self.subtask_list = QListWidget(self)
-        self.load_subtasks()
+        self.load_subtasks()   # Assure-toi que load_subtasks est défini ci-dessous.
         self.layout.addRow("Sous-tâches:", self.subtask_list)
 
-        # Zone pour ajouter une nouvelle sous-tâche
         self.new_subtask_edit = QLineEdit(self)
         self.new_subtask_edit.setPlaceholderText("Ajouter une sous-tâche")
         self.new_subtask_edit.returnPressed.connect(self.add_subtask)
-        # Bouton pour ajouter la sous-tâche
         self.add_subtask_button = QPushButton("Ajouter", self)
         self.add_subtask_button.clicked.connect(self.add_subtask)
         subtask_layout = QHBoxLayout()
@@ -73,7 +80,6 @@ class EditTaskDialog(QDialog):
         self.buttons.rejected.connect(self.reject)
         self.layout.addWidget(self.buttons)
 
-        # Gestion du clic sur les items pour changer l'état
         self.subtask_list.itemChanged.connect(self.subtask_state_changed)
 
     def load_subtasks(self):
@@ -81,11 +87,9 @@ class EditTaskDialog(QDialog):
         task_id = self.task_details[0]
         subtasks = self.db.get_subtasks(task_id)
         for sub in subtasks:
-            # sub est un tuple : (id, description, done)
             item = QListWidgetItem(sub[1])
             item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             item.setCheckState(Qt.CheckState.Checked if sub[2] else Qt.CheckState.Unchecked)
-            # Stocker l'ID de la sous-tâche dans l'item
             item.setData(Qt.ItemDataRole.UserRole, sub[0])
             self.subtask_list.addItem(item)
 
@@ -103,18 +107,21 @@ class EditTaskDialog(QDialog):
         self.db.update_subtask_status(subtask_id, done)
 
     def get_data(self):
+        deadline_str = self.deadline_edit.date().toString("dd/MM/yyyy") if self.deadline_edit.date().isValid() else None
         return {
             "task": self.task_edit.text().strip(),
             "priority": self.priority_combo.currentText(),
             "description": self.description_edit.text().strip(),
             "progress": self.progress_combo.currentText(),
-            "duration": self.duration_combo.currentText()
+            "duration": self.duration_combo.currentText(),
+            "deadline": deadline_str
         }
+
 
 class TaskDetailsDialog(QDialog):
     def __init__(self, task_info, subtasks, parent=None):
         """
-        task_info : tuple (id, task, priority, status, description, progress, duration)
+        task_info : tuple (id, task, priority, status, description, progress, duration, deadline)
         subtasks : liste de tuples (id, description, done)
         """
         super().__init__(parent)
@@ -132,6 +139,7 @@ class TaskDetailsDialog(QDialog):
         <p><b>Description :</b> {task_info[4] if task_info[4] else 'Aucune'}</p>
         <p><b>Avancement :</b> {task_info[5]}</p>
         <p><b>Durée :</b> {task_info[6]}</p>
+        <p><b>Deadline :</b> {task_info[7] if task_info[7] else 'Aucune'}</p>
         <hr>
         <h3>Sous-tâches :</h3>
         """
@@ -157,7 +165,7 @@ class TaskDetailsDialog(QDialog):
 class TaskManager(QWidget):
     def __init__(self):
         super().__init__()
-        self.zoom = 14
+        self.zoom = 16
         self.setWindowTitle("Gestionnaire de Tâches")
         self.setGeometry(100, 100, 500, 700)
 
@@ -165,6 +173,11 @@ class TaskManager(QWidget):
 
         self.layout = QVBoxLayout()
 
+        # Ajout d'un indicateur global de progression
+        self.global_progress = QProgressBar(self)
+        self.global_progress.setFormat("Progression globale : %p%")
+        self.layout.addWidget(self.global_progress)
+        
         # Champ de saisie pour la tâche
         self.task_input = QLineEdit(self)
         self.task_input.setPlaceholderText("Ajouter une nouvelle tâche")
@@ -211,6 +224,11 @@ class TaskManager(QWidget):
         self.delete_button.clicked.connect(self.delete_task)
         self.layout.addWidget(self.delete_button)
         
+        # Bouton Agenda pour passer en mode agenda
+        self.agenda_button = QPushButton("Afficher l'agenda", self)
+        self.agenda_button.clicked.connect(self.open_agenda)
+        self.layout.addWidget(self.agenda_button)
+        
         self.setMouseTracking(True)
         self.setLayout(self.layout)
         self.load_tasks()
@@ -232,12 +250,15 @@ class TaskManager(QWidget):
             tasks = self.db.sort_tasks()
         else:
             tasks = self.db.get_tasks()
+        total = len(tasks)
+        completed = 0
         for task in tasks:
             task_id = task[0]
             task_text = task[1]
             task_priority = task[2]
             task_status = task[3]
-
+            if task_status == "Terminée":
+                completed += 1
             display_text = f"{task_text} (Priorité : {task_priority})"
             if task_status == "Terminée":
                 self.completed_list.addItem(display_text)
@@ -250,6 +271,9 @@ class TaskManager(QWidget):
                 item_widget.setData(Qt.ItemDataRole.UserRole, task_id)
                 if task_priority in color:
                     item_widget.setForeground(QColor(color[task_priority]))
+        # Mise à jour de la barre de progression globale
+        progress_value = int((completed / total) * 100) if total > 0 else 0
+        self.global_progress.setValue(progress_value)
 
     def add_task(self):
         task_text = self.task_input.text().strip()
@@ -314,7 +338,6 @@ class TaskManager(QWidget):
     def edit_task(self, task_id):
         task_details = self.db.get_task(task_id)
         if task_details:
-            # On passe l'instance de la db à la dialog pour gérer les sous-tâches
             dialog = EditTaskDialog(task_details, self.db, self)
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 data = dialog.get_data()
@@ -324,7 +347,8 @@ class TaskManager(QWidget):
                                                 data["priority"],
                                                 data["description"],
                                                 data["progress"],
-                                                data["duration"])
+                                                data["duration"],
+                                                data["deadline"])
                     self.load_tasks()
                 else:
                     QMessageBox.warning(self, "Erreur", "Le texte de la tâche ne peut pas être vide !")
@@ -352,6 +376,11 @@ class TaskManager(QWidget):
         else:
             QMessageBox.warning(self, "Erreur", "Veuillez sélectionner une tâche à terminer !")
 
+    def open_agenda(self):
+        # Ouvre le dialogue de l'agenda
+        agenda_dialog = AgendaDialog(self.db,self)
+        agenda_dialog.exec()
+    
     def wheelEvent(self, event):
         if event.modifiers() == Qt.KeyboardModifier.ControlModifier:
             delta = event.angleDelta().y()
@@ -364,3 +393,38 @@ class TaskManager(QWidget):
     def closeEvent(self, event):
         self.db.close()
         event.accept()
+
+class AgendaDialog(QDialog):
+    def __init__(self, db, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Agenda")
+        self.db = db
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout(self)
+
+        self.calendar = QCalendarWidget(self)
+        self.calendar.setGridVisible(True)
+        self.calendar.selectionChanged.connect(self.update_task_list)
+        layout.addWidget(self.calendar)
+        
+        self.task_list = QListWidget(self)
+        layout.addWidget(self.task_list)
+        
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
+        button_box.accepted.connect(self.accept)
+        layout.addWidget(button_box)
+        
+        self.update_task_list()
+        
+    def update_task_list(self):
+        self.task_list.clear()
+        selected_date = self.calendar.selectedDate().toString("dd/MM/yyyy")
+        # Filtrer les tâches dont la deadline correspond à la date sélectionnée
+        tasks = self.db.get_tasks()
+        for task in tasks:
+            deadline = task[7]  # colonne deadline
+            if deadline == selected_date:
+                display_text = f"{task[1]} (Priorité : {task[2]})"
+                self.task_list.addItem(display_text)

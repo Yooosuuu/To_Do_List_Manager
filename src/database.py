@@ -16,7 +16,8 @@ class Database:
                 status TEXT DEFAULT 'Non terminée',
                 description TEXT,
                 progress TEXT CHECK(progress IN ('Non commencé', 'En cours', 'Bientôt fini', 'Terminé')) DEFAULT 'Non commencé',
-                duration TEXT CHECK(duration IN ('0-1h', '1-2h', '2-4h', '4-8h', '8-12h', '12-24h', '+24h')) DEFAULT '0-1h'
+                duration TEXT CHECK(duration IN ('0-1h', '1-2h', '2-4h', '4-8h', '8-12h', '12-24h', '+24h')) DEFAULT '0-1h',
+                deadline TEXT DEFAULT ''
             )
         """)
         self.conn.commit()
@@ -35,14 +36,14 @@ class Database:
     
     def get_tasks(self):
         self.cursor.execute("""
-            SELECT id, task, priority, status, description, progress, duration 
+            SELECT id, task, priority, status, description, progress, duration, deadline
             FROM tasks
         """)
         return self.cursor.fetchall()
     
     def get_task(self, task_id):
         self.cursor.execute("""
-            SELECT id, task, priority, status, description, progress, duration 
+            SELECT id, task, priority, status, description, progress, duration, deadline
             FROM tasks
             WHERE id = ?
         """, (task_id,))
@@ -51,12 +52,13 @@ class Database:
     def get_task_by_id(self, task_id):
         return self.get_task(task_id)
     
-    def add_task(self, task_text, priority="Normale", description="", progress="Non commencé", duration="0-1h"):
+    def add_task(self, task_text, priority="Normale", description="", progress="Non commencé", duration="0-1h", deadline=""):
         self.cursor.execute("""
-            INSERT INTO tasks (task, priority, description, progress, duration)
-            VALUES (?, ?, ?, ?, ?)
-        """, (task_text, priority, description, progress, duration))
+            INSERT INTO tasks (task, priority, description, progress, duration, deadline)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (task_text, priority, description, progress, duration, deadline))
         self.conn.commit()
+        return self.cursor.lastrowid  # Retourne l'ID de la tâche ajoutée
     
     def delete_task(self, task_id):
         self.cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
@@ -74,12 +76,12 @@ class Database:
         self.cursor.execute("UPDATE tasks SET status = ? WHERE id = ?", (status, task_id))
         self.conn.commit()
 
-    def update_task_details(self, task_id, task_text, priority, description, progress, duration):
+    def update_task_details(self, task_id, task_text, priority, description, progress, duration, deadline):
         self.cursor.execute("""
             UPDATE tasks
-            SET task = ?, priority = ?, description = ?, progress = ?, duration = ?
+            SET task = ?, priority = ?, description = ?, progress = ?, duration = ?, deadline = ?
             WHERE id = ?
-        """, (task_text, priority, description, progress, duration, task_id))
+        """, (task_text, priority, description, progress, duration, deadline, task_id))
         self.conn.commit()
 
     def clear_completed(self):
@@ -88,7 +90,7 @@ class Database:
         
     def sort_tasks(self):
         self.cursor.execute("""
-            SELECT id, task, priority, status, description, progress, duration 
+            SELECT id, task, priority, status, description, progress, duration, deadline
             FROM tasks 
             ORDER BY 
                 CASE priority
@@ -98,12 +100,11 @@ class Database:
                 END
         """)
         sorted_tasks = self.cursor.fetchall()
-        # Mise à jour de la table pour refléter l'ordre trié
         self.cursor.execute("DELETE FROM tasks")
         for task in sorted_tasks:
             self.cursor.execute("""
-                INSERT INTO tasks (id, task, priority, status, description, progress, duration)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO tasks (id, task, priority, status, description, progress, duration, deadline)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, task)
         self.conn.commit()
         return sorted_tasks
