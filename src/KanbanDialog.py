@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QGraphicsOpacityEffect
 from PyQt6.QtGui import QColor, QIcon, QAction
 
 from TaskDetailsDialog import TaskDetailsDialog
+from utils import resource_path
 
 # Classe pour afficher le tableau Kanban
 class KanbanDialog(QDialog):
@@ -13,7 +14,7 @@ class KanbanDialog(QDialog):
         super().__init__(parent)
         self.db = db
         self.setWindowTitle("Kanban Board")
-        self.setWindowIcon(QIcon("icon/kanban.png"))
+        self.setWindowIcon(QIcon(resource_path("icon/kanban.png")))
         self.setup_ui()
         self.load_tasks()
         self.setGeometry(200, 300, 1200, 300)

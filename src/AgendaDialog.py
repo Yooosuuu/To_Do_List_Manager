@@ -1,12 +1,14 @@
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QCalendarWidget, QListWidget, QDialogButtonBox
 from PyQt6.QtGui import QIcon
 
+from utils import resource_path
+
 # Classe pour afficher l'agenda
 class AgendaDialog(QDialog):
     def __init__(self, db, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Agenda")
-        self.setWindowIcon(QIcon("icon/agenda.png"))
+        self.setWindowIcon(QIcon(resource_path("icon/agenda.png")))
         self.db = db
         self.setup_ui()
 

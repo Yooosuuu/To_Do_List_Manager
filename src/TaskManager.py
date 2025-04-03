@@ -10,6 +10,7 @@ from AgendaDialog import AgendaDialog
 from KanbanDialog import KanbanDialog
 from database import Database
 from ProgressionBar import SmoothProgressBar
+from utils import resource_path
 
 # Classe principale du gestionnaire de tâches
 class TaskManager(QWidget):
@@ -18,7 +19,7 @@ class TaskManager(QWidget):
         self.zoom = 16
         self.setStyleSheet(f"font-size: {self.zoom}px;")
         self.setWindowTitle("Gestionnaire de Tâches")
-        self.setWindowIcon(QIcon("icon/logo.png"))
+        self.setWindowIcon(QIcon(resource_path("icon/logo.png")))
         self.setGeometry(100, 100, 500, 700)
 
         self.db = Database()

@@ -2,6 +2,8 @@ from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 
+from utils import resource_path
+
 # Classe pour afficher les détails d'une tâche
 class TaskDetailsDialog(QDialog):
     def __init__(self, task_info, subtasks, parent=None):
@@ -10,9 +12,8 @@ class TaskDetailsDialog(QDialog):
         subtasks : liste de tuples (id, description, done)
         """
         super().__init__(parent)
-        icon = QIcon("path/to/icon.png")
         self.setWindowTitle("Détails de la Tâche")
-        self.setWindowIcon(QIcon("icon/loupe.png"))
+        self.setWindowIcon(QIcon(resource_path("icon/loupe.png")))
         self.setup_ui(task_info, subtasks)
 
     def setup_ui(self, task_info, subtasks):
