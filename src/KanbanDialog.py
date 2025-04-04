@@ -58,10 +58,10 @@ class KanbanDialog(QDialog):
     def load_tasks(self):
         # Efface toutes les listes
         colors = {
-            "Faible": "lightgreen",
-            "Normale": "yellow",
-            "Haute": "red",
-            "Terminée": "lightblue"
+            "Faible": "#A3BE8C",  # Vert doux
+            "Normale": "#EBCB8B",  # Jaune pastel
+            "Haute": "#BF616A",    # Rouge atténué
+            "Terminée": "#88C0D0"  # Bleu clair
         }
         for lw in self.lists.values():
             lw.clear()

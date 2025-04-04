@@ -57,6 +57,10 @@ class EditTaskDialog(QDialog):
             self.deadline_edit.setDate(QDate.currentDate())
         self.layout.addRow("Deadline:", self.deadline_edit)
 
+        self.category_edit = QLineEdit(self)
+        self.category_edit.setText(self.task_details[8] if self.task_details[8] else "")
+        self.layout.addRow("Catégorie:", self.category_edit)
+
         # Sous-tâches
         self.subtask_list = QListWidget(self)
         self.load_subtasks()   # Assure-toi que load_subtasks est défini ci-dessous.
@@ -111,5 +115,6 @@ class EditTaskDialog(QDialog):
             "description": self.description_edit.text().strip(),
             "progress": self.progress_combo.currentText(),
             "duration": self.duration_combo.currentText(),
-            "deadline": deadline_str
+            "deadline": deadline_str,
+            "category": self.category_edit.text().strip() or None
         }

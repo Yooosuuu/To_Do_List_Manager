@@ -32,7 +32,7 @@ class SmoothProgressBar(QProgressBar):
 
         # Dessiner le fond (barre vide)
         background_brush = QBrush(QColor(255, 255, 255, 77))  # Blanc semi-transparent
-        pen = QPen(QColor(0, 0, 0, 77))
+        pen = QPen(QColor(0, 0, 0, 0))
         pen.setWidth(int(3 * self.zoom))  # Adjust pen width based on zoom
         painter.setPen(pen)
         painter.setBrush(background_brush)
@@ -45,8 +45,8 @@ class SmoothProgressBar(QProgressBar):
 
         # Appliquer un dégradé de couleur
         gradient = QLinearGradient(QPointF(rect.left(), rect.top()), QPointF(rect.right(), rect.top()))
-        gradient.setColorAt(0, QColor(76, 175, 80))  # Vert foncé
-        gradient.setColorAt(1, QColor(129, 199, 132))  # Vert clair
+        gradient.setColorAt(0, QColor(56, 142, 60))  # Vert foncé moins agressif
+        gradient.setColorAt(float(progress_width/rect.width()), QColor(102, 187, 106))  # Vert clair moins agressif
         progress_brush = QBrush(gradient)
 
         # Dessiner la barre de progression
