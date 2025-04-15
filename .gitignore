@@ -14,7 +14,7 @@ logs/
 .env.*
 
 # Build outputs
-dist/
+dist/tasks.db
 build/
 out/
 
