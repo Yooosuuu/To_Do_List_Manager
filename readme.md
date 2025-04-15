@@ -12,7 +12,7 @@
 
 ## Prérequis
 
-Avant d'utiliser cette application, assurez-vous d'avoir installé Python ainsi que les bibliothèques suivantes :
+Avant d'utiliser cette application (si vous souhaiter l'installer de manière "normale"), assurez-vous d'avoir installé Python ainsi que les bibliothèques suivantes :
 
 - Python 3.x (testé avec Python 3.13)
 - PyQt6
@@ -25,6 +25,8 @@ pip install pyqt6 sqlite3
 ```
 
 ## Installation
+
+Récupérer l'éxecutable dans dist/ ou suivre les étapes ci-dessous:
 
 1. Clonez ce dépôt :
    ```sh
