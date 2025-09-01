@@ -58,7 +58,7 @@ Pour créer un exécutable, utilisez **PyInstaller** :
    pyinstaller --onefile --windowed --add-data "src/icon/*;icon" --icon=src/icon/logo.png src/main.py
    ```
 
-L'exécutable sera disponible dans le dossier `dist/`. (Remplacer ; par : si sur linux/MacOS)
+L'exécutable sera disponible dans le dossier `dist/`.
 
 ## Structure du projet
 

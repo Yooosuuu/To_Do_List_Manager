@@ -33,6 +33,6 @@ Desktop.ini
 
 # Python cache
 __pycache__/
-
+dist/To_Do_List
 tasks.db
 main.spec
